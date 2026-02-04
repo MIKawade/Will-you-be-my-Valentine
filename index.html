@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Will You Be My Valentine?</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+    .customize-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .customize-overlay.show { opacity: 1; pointer-events: auto; }
+    .customize-modal { background: #fff; border-radius: 16px; padding: 1.5rem; max-width: 360px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; box-sizing: border-box; overflow: hidden; }
+    .customize-modal h3 { margin: 0 0 1rem; color: #d32f2f; font-size: 1.25rem; }
+    .customize-modal p { margin: 0 0 1rem; color: #555; font-size: 0.95rem; }
+    .customize-modal .step-form { display: none; }
+    .customize-modal .step-form.show { display: block; }
+    .customize-modal .step-form input { width: 100%; max-width: 100%; padding: 0.75rem 1rem; margin-bottom: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+    .customize-modal .step-link { display: none; }
+    .customize-modal .step-link.show { display: block; }
+    .customize-modal .step-link input { width: 100%; max-width: 100%; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; }
+    .customize-btn { background: #fa0561; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 1rem; cursor: pointer; margin: 0.25rem; }
+    .customize-btn:hover { background: #e03777; }
+    .customize-btn.secondary { background: #666; }
+    .customize-btn.secondary:hover { background: #555; }
+    .customize-close { position: absolute; top: 0.5rem; right: 0.5rem; width: 32px; height: 32px; border: none; background: #eee; color: #666; font-size: 1.25rem; cursor: pointer; border-radius: 50%; line-height: 1; padding: 0; }
+    .customize-close:hover { background: #ddd; color: #333; }
+    .customize-modal { position: relative; }
+    .from-to-text { font-size: 0.9rem; color: #888; margin-top: 0.5rem; }
+  </style>
 </head>
 <body>
     <div class="container">
@@ -16,8 +37,72 @@
             <button class="yes-button" onclick="handleYesClick()">Yes</button>
             <button class="no-button" onclick="handleNoClick()">No</button>
         </div>
-        
+    </div>
+
+    <div class="customize-overlay" id="customizeOverlay">
+        <div class="customize-modal">
+            <button type="button" class="customize-close" onclick="closeOverlay()" aria-label="Close">&times;</button>
+            <div class="step-welcome" id="stepWelcome">
+                <h3>💝 Make your own wish!</h3>
+                <p>Personalize this Valentine card with names. Share the link and they'll see it made just for them!</p>
+                <button class="customize-btn" onclick="showNameForm()">Customize & Get Link</button>
+            </div>
+            <div class="step-form" id="stepForm">
+                <h3>Enter name</h3>
+                <input type="text" id="inputTo" placeholder="Their name (recipient)" maxlength="30" />
+                <button class="customize-btn" onclick="generateLink()">OK</button>
+            </div>
+            <div class="step-link" id="stepLink">
+                <h3>✅ Share this link!</h3>
+                <p>Send this link to them. When they open it, they'll see their name.</p>
+                <input type="text" id="shareLink" readonly />
+                <button class="customize-btn" id="copyBtn" onclick="copyLink()">Copy Link</button>
+                <button class="customize-btn secondary" onclick="closeOverlay()">Close</button>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
+    <script>
+    (function() {
+      var params = new URLSearchParams(location.search);
+      var to = params.get('to') || '';
+      if (to) {
+        document.getElementById('mainHeading').textContent = 'Will you be my Valentine, ' + to + '?';
+      }
+      setTimeout(function() {
+        if (!to) document.getElementById('customizeOverlay').classList.add('show');
+      }, 1000);
+      window.showNameForm = function() {
+        document.getElementById('stepWelcome').style.display = 'none';
+        document.getElementById('stepForm').classList.add('show');
+      };
+      window.generateLink = function() {
+        var toVal = document.getElementById('inputTo').value.trim() || 'Someone special';
+        var base = location.origin + location.pathname;
+        var link = base + '?to=' + encodeURIComponent(toVal);
+        document.getElementById('stepForm').classList.remove('show');
+        document.getElementById('stepLink').classList.add('show');
+        document.getElementById('shareLink').value = link;
+        document.getElementById('mainHeading').textContent = 'Will you be my Valentine, ' + toVal + '?';
+      };
+      window.copyLink = function() {
+        var input = document.getElementById('shareLink');
+        var btn = document.getElementById('copyBtn');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(input.value).then(function() {
+            if (btn) { var t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = t; }, 2000); }
+          });
+        } else {
+          input.select();
+          document.execCommand('copy');
+          input.blur();
+          if (btn) { var t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = t; }, 2000); }
+        }
+      };
+      window.closeOverlay = function() {
+        document.getElementById('customizeOverlay').classList.remove('show');
+      };
+    })();
+    </script>
 </body>
 </html>
